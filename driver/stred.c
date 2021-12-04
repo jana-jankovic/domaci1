@@ -20,7 +20,7 @@ static struct cdev *my_cdev;
 DECLARE_WAIT_QUEUE_HEAD(appendQ);
 
 char str[100];
-int pos = 0;
+int duzina;
 int endRead = 0;
 int r=0;
 int stred_open(struct inode *pinode, struct file *pfile);
@@ -40,13 +40,13 @@ struct file_operations my_fops =
 
 int stred_open(struct inode *pinode, struct file *pfile) 
 {
-		printk(KERN_INFO "Succesfully opened lifo\n");
+		printk(KERN_INFO "Succesfully opened stred\n");
 		return 0;
 }
 
 int stred_close(struct inode *pinode, struct file *pfile) 
 {
-		printk(KERN_INFO "Succesfully closed lifo\n");
+		printk(KERN_INFO "Succesfully closed stred\n");
 		return 0;
 }
 
@@ -87,7 +87,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 	int ret;
 	int i=0,j=0;
 	int s=0,k=0;
-        int duzina;
+     
 
 	ret = copy_from_user(buff, buffer, length);
 	if(ret)
@@ -119,9 +119,9 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		for(i = 0; i < s; i++)
 		{
 		    str[i] = string[i];
-		    pos++;
+		   
 		}
-		pos--;
+	
 		while(i != 100)
 		{	
 		str[i] = 0;
@@ -137,8 +137,8 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		{
 		    str[i] = 0;
 		}	
-		pos = 0;
 		
+		duzina = strlen(str);
 		wake_up_interruptible(&appendQ);
 	}
 
@@ -148,39 +148,35 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 	
 		shrink_s = strim(str);
 		i=0;
-		pos = 0;	
+			
 		while(*shrink_s != '\0')
 	        {
 			str[i] = *shrink_s;
 			shrink_s++;
 			i++;
-			pos++;
 		} 
-		pos--;
+	
 		while(i != 100)
 		{	
 		str[i] = 0;
 		i++;
 		}
 
+		duzina = strlen(str);
 		wake_up_interruptible(&appendQ);
         }
 
 
         if(strcmp(komanda,"append") == 0)
-	{
-	/*	if(wait_event_interruptible(appendQ,(100 - pos > s)))
+	{       
+		duzina = strlen(str);
+		if(wait_event_interruptible(appendQ,((100 - duzina) > s)))
 			return -ERESTARTSYS;
-		if(100 - pos > s)
+		if((100 - duzina) > s)
 		{	
-		for(i = 0; i< s;i++)
-	        {
-			str[pos] = string[i];
-			pos++;
-		}
-		}
-	*/
 		strcat(str,string);
+		}
+	
 		
 	}
 
@@ -192,9 +188,9 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 	        {
 			str[i] = 0;
 		
-		}
-		pos = pos - value;	
+		}	
 	
+		duzina = strlen(str);
 		wake_up_interruptible(&appendQ);
 	}
 		
@@ -232,8 +228,9 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		{
 		 str[i] = 0;
 		}
-		pos = k;	
 	
+	
+		duzina = strlen(str);
 		wake_up_interruptible(&appendQ);
 	}
 		
