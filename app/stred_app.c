@@ -109,6 +109,8 @@ int main(int argc, char** argv)
 			puts("Problem pri zatvaranju /dev/stred");
 			return -1;
 		}
+
+                free(str);
 		}
 		if(*opcija == '7' ||*opcija == '2' ||*opcija == '3' ||*opcija == '4' ||*opcija == '5' ||*opcija == '6' )
 		{ 
@@ -133,7 +135,13 @@ int main(int argc, char** argv)
 			return -1;
 		}
 		}
+		if (*opcija == '2') free(string);
+		if (*opcija == '3') free(string2);
+		if (*opcija == '6') free(izraz);
+		if (*opcija == '7') free(broj);
 	}
+
+	free(opcija);
 	return 0;
 }
 
