@@ -19,6 +19,9 @@ static struct cdev *my_cdev;
 
 DECLARE_WAIT_QUEUE_HEAD(appendQ);
 
+struct semaphore sem;
+
+
 char str[100];
 int duzina;
 int endRead = 0;
@@ -116,6 +119,9 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 
       	if(strcmp(komanda,"string") == 0)
         {
+
+		if(down_interruptible(&sem))
+			return -ERESTARTSYS;
 		for(i = 0; i < s; i++)
 		{
 		    str[i] = string[i];
@@ -127,12 +133,17 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		str[i] = 0;
 		i++;
 		}
+                up(&sem);
+	
 	}
 
 
 	      
         if(strcmp(komanda,"clear") == 0)
         {
+
+		if(down_interruptible(&sem))
+			return -ERESTARTSYS;
 		for(i = 0; i < 100; i++)
 		{
 		    str[i] = 0;
@@ -140,11 +151,15 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		
 		duzina = strlen(str);
 		wake_up_interruptible(&appendQ);
+	        up(&sem);
 	}
 
      
         if(strcmp(komanda,"shrink") == 0)
         {
+
+		if(down_interruptible(&sem))
+			return -ERESTARTSYS;
 	
 		shrink_s = strim(str);
 		i=0;
@@ -163,26 +178,43 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		}
 
 		duzina = strlen(str);
+	        up(&sem);
 		wake_up_interruptible(&appendQ);
-        }
+        
+	}
 
 
         if(strcmp(komanda,"append") == 0)
 	{       
-		duzina = strlen(str);
-		if(wait_event_interruptible(appendQ,((100 - duzina) > s)))
+
+		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
-		if((100 - duzina) > s)
+		duzina = strlen(str);
+              
+		while((100 - duzina) < s)
+	        {
+		up(&sem);
+	       	if(wait_event_interruptible(appendQ,((100 - duzina) >= s)))
+			return -ERESTARTSYS;
+		if(down_interruptible(&sem))
+			return -ERESTARTSYS;
+	        }
+         /*	if(wait_event_interruptible(appendQ,((100 - duzina) > s)))
+			return -ERESTARTSYS;*/
+		if((100 - duzina) >= s)
 		{	
 		strcat(str,string);
 		}
 	
-		
+		up(&sem);
+
 	}
 
 	
         if(strcmp(komanda,"truncate") == 0)
 	{
+		if(down_interruptible(&sem))
+			return -ERESTARTSYS;
 		duzina = strlen(str);
 		for(i = duzina-value; i < duzina;i++)
 	        {
@@ -191,11 +223,14 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		}	
 	
 		duzina = strlen(str);
+		up(&sem);
 		wake_up_interruptible(&appendQ);
 	}
 		
         if(strcmp(komanda,"remove") == 0)
 	{
+		if(down_interruptible(&sem))
+			return -ERESTARTSYS;
 		k = 0;
 
 		for(i = 0;i < 100; i++)
@@ -231,6 +266,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 	
 	
 		duzina = strlen(str);
+		up(&sem);
 		wake_up_interruptible(&appendQ);
 	}
 		
@@ -264,7 +300,9 @@ static int __init stred_init(void)
 	//Initialize array
 	for (i=0; i<100; i++)
 		str[i] = 0;
-
+   
+   sema_init(&sem,1);
+   
    ret = alloc_chrdev_region(&my_dev_id, 0, 1, "stred");
    if (ret){
       printk(KERN_ERR "failed to register char device\n");
