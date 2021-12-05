@@ -22,7 +22,7 @@ DECLARE_WAIT_QUEUE_HEAD(appendQ);
 struct semaphore sem;
 
 
-char str[100];
+char str[101];
 int duzina;
 int endRead = 0;
 int r=0;
@@ -58,7 +58,7 @@ ssize_t stred_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	int ret;
 	char buff[BUFF_SIZE];
 	long int len;
-		
+	
 	if (endRead){
 		endRead = 0;
 		r = 0;
@@ -74,6 +74,8 @@ ssize_t stred_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	if (r == 100) {
 		endRead = 1;
 	}
+	
+
 	return len;
 }
 
@@ -120,6 +122,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
       	if(strcmp(komanda,"string") == 0)
         {
 
+
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
 		for(i = 0; i < s; i++)
@@ -142,6 +145,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
         if(strcmp(komanda,"clear") == 0)
         {
 
+
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
 		for(i = 0; i < 100; i++)
@@ -150,13 +154,15 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		}	
 		
 		duzina = strlen(str);
-		wake_up_interruptible(&appendQ);
 	        up(&sem);
+		wake_up_interruptible(&appendQ);
 	}
 
      
         if(strcmp(komanda,"shrink") == 0)
         {
+
+
 
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
@@ -187,10 +193,11 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
         if(strcmp(komanda,"append") == 0)
 	{       
 
+
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
 		duzina = strlen(str);
-              
+                s = strlen(string); 
 		while((100 - duzina) < s)
 	        {
 		up(&sem);
@@ -199,8 +206,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
 	        }
-         /*	if(wait_event_interruptible(appendQ,((100 - duzina) > s)))
-			return -ERESTARTSYS;*/
+		
 		if((100 - duzina) >= s)
 		{	
 		strcat(str,string);
@@ -213,6 +219,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 	
         if(strcmp(komanda,"truncate") == 0)
 	{
+
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
 		duzina = strlen(str);
@@ -229,6 +236,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		
         if(strcmp(komanda,"remove") == 0)
 	{
+
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
 		k = 0;
@@ -270,25 +278,7 @@ ssize_t stred_write(struct file *pfile, const char __user *buffer, size_t length
 		wake_up_interruptible(&appendQ);
 	}
 		
-	/*if(pos<10)
-	{
-		ret = sscanf(buff,"%d",&value);
-		if(ret==1)//one parameter parsed in sscanf
-		{
-			printk(KERN_INFO "Succesfully wrote value %d", value); 
-			lifo[pos] = value; 
-			os=pos+1;
-		}
-		else
-		{
-			printk(KERN_WARNING "Wrong command format\n");
-		}
-	}
-	else
-	{
-		printk(KERN_WARNING "Lifo is full\n"); 
-	}
-         */
+	
 	return length;
 }
 

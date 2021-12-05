@@ -13,7 +13,8 @@ int main(int argc, char** argv)
 	char *broj;
 	char komanda[200];
 	size_t num_of_bytes = 100;
-        char *str;
+	size_t num_of_bytes2 = 1;
+	char *str;
 
 	while(opcija[0] != 'Q') 
 	{
@@ -28,8 +29,8 @@ int main(int argc, char** argv)
 		printf("7: Izbriši poslednjih n karaktera iz stringa\n");
 		printf("Unesite broj zeljene opcije ili Q za kraj\n");
 		
-		opcija = (char *)malloc(2);
-		getline (&opcija, &num_of_bytes, stdin);
+		opcija = (char *)malloc(num_of_bytes2+1);
+		getline (&opcija, &num_of_bytes2, stdin);
 
 		if (*opcija == '2') 
 		{		
@@ -62,12 +63,12 @@ int main(int argc, char** argv)
 		{
 			case '2':
 				strcpy(komanda,"string=");
-				strncat (komanda, string, 100);
+				strncat (komanda, string, 101);
 				break;
 
 			case '3':
 				strcpy(komanda,"append=");
-				strncat (komanda, string2, 100);
+				strncat (komanda, string2, 101);
 				break;
 
 			case '4':
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
 			
 			case '6':
 				strcpy(komanda,"remove=");
-				strncat (komanda, izraz, 100);
+				strncat (komanda, izraz, 101);
 				break;
 
 			case '7':
